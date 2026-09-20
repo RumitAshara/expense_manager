@@ -1,64 +1,38 @@
+import 'package:expense_manager/Database/controller/category_controller.dart';
+import 'package:expense_manager/Database/controller/transaction_controller.dart';
 import 'package:expense_manager/core/constant/App_Colors.dart';
 import 'package:expense_manager/core/constant/TextSize.dart';
 import 'package:expense_manager/core/widgets/TextWidget.dart';
 import 'package:expense_manager/screens/Add_Txn.dart';
+import 'package:expense_manager/screens/AllData.dart';
+import 'package:expense_manager/screens/Transaction_Details.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-class Dashboard extends StatelessWidget {
-  Dashboard({super.key});
-  List<Map> li = [
-    {
-      "title": "Lunch",
-      "sub": "Foods & Drinks",
-      "amount": "-320.00",
-      "date": "Today",
-      "isincome":false,
-    },
-    {
-      "title": "Shopping",
-      "sub": "Shopping",
-      "amount": "-1250",
-      "date": "Today",
-      "isincome":false,
-    },
-    {
-      "title": "Bus Ticket",
-      "sub": "Transport",
-      "amount": "-80.00",
-      "date": "yesterday",
-      "isincome":false,
-    },
-    {
-      "title": "Salary",
-      "sub": "Salary",
-      "amount": "30,000.00",
-      "date": "22 may 2026",
-      "isincome":true
-    },
-  ];
+class Dashboard extends StatefulWidget {
+  const Dashboard({super.key});
+
+  @override
+  State<Dashboard> createState() => _DashboardState();
+}
+
+class _DashboardState extends State<Dashboard> {
+  final TransactionController transactionController =
+  Get.find<TransactionController>();
+
+  final CategoryController categoryController =
+  Get.find<CategoryController>();
+
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
     final double height = MediaQuery.sizeOf(context).height;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () {}, icon: Icon(Icons.menu, size: 24)),
-        automaticallyImplyLeading: false,
-        actionsPadding: EdgeInsets.symmetric(horizontal: width * 0.04),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.notifications_none, size: 24),
-          ),
-          SizedBox(width: width * 0.04),
-          CircleAvatar(
-            child: IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.person, size: 24, color: AppColors.primary),
-            ),
-            backgroundColor: AppColors.primaryLight,
-          ),
-        ],
+        surfaceTintColor: AppColors.background,
+        backgroundColor: AppColors.background,
+        title: TextWidget(text: "Dashboard", size: TextSizes.Heading_4, weight: TextWidget.Bold_text),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: width * 0.04),
@@ -69,7 +43,7 @@ class Dashboard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextWidget(
-                text: "Good Morning, Rumit 👋",
+                text: "Good Morning, User 👋",
                 size: TextSizes.Title_2,
                 weight: TextWidget.Bold_text,
               ),
@@ -79,8 +53,7 @@ class Dashboard extends StatelessWidget {
                 weight: TextWidget.Bold_text,
               ),
               SizedBox(height: height * 0.01),
-              Container(
-                height: height * 0.2,
+              Obx(() => Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
@@ -90,34 +63,21 @@ class Dashboard extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.all(width * 0.04),
                   child: Column(
+                    spacing: height*0.01,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextWidget(
-                            text: "Current Balance",
-                            size: TextSizes.Title_2,
-                            weight: TextWidget.Medium_text,
-                            color: AppColors.white,
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.remove_red_eye,
-                              size: 16,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ],
+                      TextWidget(
+                        text: "Current Balance",
+                        size: TextSizes.Title_1,
+                        weight: TextWidget.Medium_text,
+                        color: AppColors.white,
                       ),
                       TextWidget(
-                        text: "₹24,400.00",
+                        text: "₹${transactionController.totalBalance.value.toStringAsFixed(2)}",
                         size: TextSizes.Heading_4,
                         weight: TextWidget.Bold_text,
                         color: AppColors.white,
                       ),
-                      SizedBox(height: height * 0.01),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -132,7 +92,7 @@ class Dashboard extends StatelessWidget {
                                 ),
                                 child: Icon(
                                   Icons.arrow_upward,
-                                  size: 20,
+                                  size: 24,
                                   color: AppColors.primary,
                                 ),
                               ),
@@ -142,19 +102,13 @@ class Dashboard extends StatelessWidget {
                                 children: [
                                   TextWidget(
                                     text: "Income",
-                                    size: TextSizes.Title_3,
+                                    size: TextSizes.Title_2,
                                     weight: TextWidget.Medium_text,
                                     color: AppColors.white,
                                   ),
                                   TextWidget(
-                                    text: "₹12,800.00",
-                                    size: TextSizes.Title_3,
-                                    weight: TextWidget.Medium_text,
-                                    color: AppColors.white,
-                                  ),
-                                  TextWidget(
-                                    text: "This Month",
-                                    size: TextSizes.Title_3,
+                                    text: "₹${transactionController.totalIncome.value.toStringAsFixed(2)}",
+                                    size: TextSizes.Title_2,
                                     weight: TextWidget.Medium_text,
                                     color: AppColors.white,
                                   ),
@@ -172,7 +126,7 @@ class Dashboard extends StatelessWidget {
                                 ),
                                 child: Icon(
                                   Icons.arrow_downward,
-                                  size: 20,
+                                  size: 24,
                                   color: AppColors.expense,
                                 ),
                               ),
@@ -182,19 +136,13 @@ class Dashboard extends StatelessWidget {
                                 children: [
                                   TextWidget(
                                     text: "Expense",
-                                    size: TextSizes.Title_3,
+                                    size: TextSizes.Title_2,
                                     weight: TextWidget.Medium_text,
                                     color: AppColors.white,
                                   ),
                                   TextWidget(
-                                    text: "₹12,800.00",
-                                    size: TextSizes.Title_3,
-                                    weight: TextWidget.Medium_text,
-                                    color: AppColors.white,
-                                  ),
-                                  TextWidget(
-                                    text: "This Month",
-                                    size: TextSizes.Title_3,
+                                    text: "₹${transactionController.totalExpense.value.toStringAsFixed(2)}",
+                                    size: TextSizes.Title_2,
                                     weight: TextWidget.Medium_text,
                                     color: AppColors.white,
                                   ),
@@ -207,321 +155,157 @@ class Dashboard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
+              )),
               SizedBox(height: height * 0.02),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  TextWidget(
+                    text: "Recent Transactions",
+                    size: TextSizes.Title_1,
+                    weight: TextWidget.Bold_text,
+                  ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => AddTxn(isincome: false,),));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => Alldata(),));
                     },
-                    child: Container(
-                      height: height*0.1,
-                      width: width*0.2,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(width * 0.01),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.add,
-                              size: 20,
-                              color: AppColors.white,
-                            ),
-                          ),
-                          SizedBox(height: height * 0.01),
-                          TextWidget(
-                            text: "Add Txn",
-                            size: TextSizes.Title_3,
-                            weight: TextWidget.Medium_text,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      height: height*0.1,
-                      width: width*0.2,
-                      decoration: BoxDecoration(
-                        color: AppColors.budget.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.pie_chart,
-                              size: 20,
-                              color: AppColors.budget,
-                            ),
-                          ),
-                          SizedBox(height: height * 0.01),
-                          TextWidget(
-                            text: "Budget",
-                            size: TextSizes.Title_3,
-                            weight: TextWidget.Medium_text,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      height: height*0.1,
-                      width: width*0.2,
-                      decoration: BoxDecoration(
-                        color: AppColors.education.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(width * 0.01),
-                            decoration: BoxDecoration(
-                              color: AppColors.education,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.bar_chart,
-                              size: 24,
-                              color: AppColors.white,
-                            ),
-                          ),
-                          SizedBox(height: height * 0.01),
-                          TextWidget(
-                            text: "Reports",
-                            size: TextSizes.Title_3,
-                            weight: TextWidget.Medium_text,
-                          ),
-                        ],
-                      ),
+                    child: TextWidget(
+                      text: "View All",
+                      size: TextSizes.Title_2,
+                      weight: TextWidget.Bold_text,
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: height * 0.02),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: width*0.04,vertical: height*0.02),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextWidget(
-                              text: "Recent Transactions",
-                              size: TextSizes.Title_2,
-                              weight: TextWidget.Bold_text,
-                            ),
-                            GestureDetector(
-                              onTap: () {},
-                              child: TextWidget(
-                                text: "View All",
-                                size: TextSizes.Title_3,
-                                weight: TextWidget.Bold_text,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
-                        ),
+                child: Obx(() {
+                  final transactions =
+                  transactionController.transactions.take(10).toList();
 
-                        // THESE ARE PLACEHOLDERS DATA WILL BE FETCHED FROM DATABASE
-                        Expanded(
-                          child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: li.length,
-                              itemBuilder: (context, index) {
-                                var data = li[index];
-                                bool isincome = data['isincome'];
-                                return Padding(
-                                  padding: EdgeInsets.symmetric(  vertical: height*0.01),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                           Column(
-                                             crossAxisAlignment: CrossAxisAlignment.start,
-                                             children: [
-                                               TextWidget(text: "${data['title']}", size: TextSizes.Title_3, weight: TextWidget.Medium_text),
-                                               TextWidget(text: "${data['sub']}", size: TextSizes.Title_3, weight: TextWidget.Medium_text,color: AppColors.textSecondary,),
-                                             ],
-                                           ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          TextWidget(text: '${data['amount']}', size: TextSizes.Title_3, weight: TextWidget.Medium_text,color: isincome?AppColors.income:AppColors.expense),
-                                          TextWidget(text: "${data['date']}", size: TextSizes.Title_3, weight: TextWidget.Medium_text,color: AppColors.textSecondary,),
-                                        ],
+                  if (transactionController.isLoading.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    );
+                  }
+
+                  if (transactions.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No transactions yet',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: transactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+
+                      final isIncome = transaction.type == 'income';
+
+                      final category = categoryController.categories
+                          .where(
+                            (category) =>
+                        category.id == transaction.categoryId,
+                      )
+                          .firstOrNull;
+
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: height * 0.005,
+                        ),
+                        child: InkWell(
+                          onTap: (){
+                            Navigator.push(context,MaterialPageRoute(builder: (context) => TransactionDetails(transaction: transaction),));
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: width * 0.04,
+                              vertical: height * 0.018,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    TextWidget(
+                                      text: category?.name ?? 'Unknown',
+                                      size: TextSizes.Title_2,
+                                      weight: TextWidget.Medium_text,
+                                    ),
+
+                                    TextWidget(
+                                      text: category?.type.toUpperCase() ?? 'Unknown',
+                                      size: TextSizes.Title_2,
+                                      weight: TextWidget.Medium_text,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.end,
+                                  children: [
+
+                                    TextWidget(
+                                      text:
+                                      '${isIncome ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}',
+                                      size: TextSizes.Title_2,
+                                      weight: TextWidget.Medium_text,
+                                      color: isIncome
+                                          ? AppColors.income
+                                          : AppColors.expense,
+                                    ),
+
+                                    TextWidget(
+                                      text: DateFormat('dd MMM yyyy').format(
+                                        DateTime.parse(transaction.transactionDate),
                                       ),
-                                    ],
-                                  ),
-                                );
-                              }
-                          ),),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: height * 0.02),
-              Container(
-                // height: height*0.1,
-                padding: EdgeInsets.all(width * 0.04),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 0.2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.food.withValues(alpha: 0.2),
-                          radius: 28,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.food,
-                            child: Icon(
-                              Icons.fastfood,
-                              size: 16,
-                              color: AppColors.white,
+                                      size: TextSizes.Title_2,
+                                      weight: TextWidget.Medium_text,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        TextWidget(text: "Food", size: TextSizes.Title_3, weight: TextWidget.normal_text),
-                        TextWidget(text: "₹4320", size: TextSizes.Title_3, weight: TextWidget.normal_text,color: AppColors.textSecondary,),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.transport.withValues(alpha: 0.2),
-                          radius: 28,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.transport,
-                            child: Icon(
-                              Icons.train,
-                              size: 16,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ),
-                        TextWidget(text: "Transport", size: TextSizes.Title_3, weight: TextWidget.normal_text),
-                        TextWidget(text: "₹4320", size: TextSizes.Title_3, weight: TextWidget.normal_text,color: AppColors.textSecondary,),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.bills.withValues(alpha: 0.2),
-                          radius: 28,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.bills,
-                            child: Icon(
-                              Icons.newspaper,
-                              size: 16,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ),
-                        TextWidget(text: "Biils", size: TextSizes.Title_3, weight: TextWidget.normal_text),
-                        TextWidget(text: "₹4320", size: TextSizes.Title_3, weight: TextWidget.normal_text,color: AppColors.textSecondary,),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.shopping.withValues(alpha: 0.2),
-                          radius: 28,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.shopping,
-                            child: Icon(
-                              Icons.shopping_bag,
-                              size: 16,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ),
-                        TextWidget(text: "Shopping", size: TextSizes.Title_3, weight: TextWidget.normal_text),
-                        TextWidget(text: "₹4320", size: TextSizes.Title_3, weight: TextWidget.normal_text,color: AppColors.textSecondary,),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-                          radius: 28,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.primary,
-                            child: Icon(
-                              Icons.more_horiz,
-                              size: 16,
-                              color: AppColors.white,
-                            ),
-                          ),
-                        ),
-                        TextWidget(text: "Food", size: TextSizes.Title_3, weight: TextWidget.normal_text),
-                        TextWidget(text: "₹4320", size: TextSizes.Title_3, weight: TextWidget.normal_text,color: AppColors.textSecondary,),
-                      ],
-                    ),
-                  ],
-                ),
+                      );
+                    },
+                  );
+                }),
               ),
               SizedBox(height: height * 0.02),
             ],
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        Navigator.push(context, MaterialPageRoute(builder: (context) => AddTxn(isincome: true),));
+      },child: Icon(Icons.add,color: AppColors.background,),backgroundColor: AppColors.primary,),
     );
   }
 }

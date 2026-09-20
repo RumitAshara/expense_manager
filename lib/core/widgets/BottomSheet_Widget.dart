@@ -22,7 +22,7 @@ class BottomSheetWidget extends StatelessWidget {
             return ListTile(
               trailing: Icon(Icons.arrow_forward_ios_outlined),
               title: TextWidget(text: exp_cat[index], size: TextSizes.Title_3, weight: TextWidget.Medium_text),
-              leading: ,
+              // leading: ,
             );
           }
         )

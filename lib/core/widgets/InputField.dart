@@ -10,6 +10,7 @@ class Inputfield extends StatelessWidget {
   final TextInputType type;
   final bool readOnly;
   final VoidCallback? onTap;
+  final Function(String)? onChanged;
   final String? Function(String?)? validator;
   final int maxlines;
   const Inputfield(
@@ -23,6 +24,7 @@ class Inputfield extends StatelessWidget {
         this.isobscure = false,
         this.readOnly = false, // Default to false
         this.onTap,
+        this.onChanged,
         this.validator,
         this.maxlines = 1,
       });
@@ -37,6 +39,7 @@ class Inputfield extends StatelessWidget {
       validator: validator,
       onTap: onTap,
       readOnly: readOnly,
+      onChanged: onChanged,
       style: TextStyle(
           fontSize: 12
       ),

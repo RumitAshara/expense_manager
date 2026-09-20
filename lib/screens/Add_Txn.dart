@@ -1,13 +1,23 @@
+import 'package:expense_manager/Database/controller/category_controller.dart';
+import 'package:expense_manager/Database/controller/payment_type_controller.dart';
+import 'package:expense_manager/Database/controller/transaction_controller.dart';
+import 'package:expense_manager/Database/models/category_model.dart';
+import 'package:expense_manager/Database/models/payment_type_model.dart';
+import 'package:expense_manager/Database/models/transaction_model.dart';
 import 'package:expense_manager/core/constant/App_Colors.dart';
 import 'package:expense_manager/core/constant/TextSize.dart';
+import 'package:expense_manager/core/helpers/category_helper.dart';
+import 'package:expense_manager/core/helpers/payment_helper.dart';
 import 'package:expense_manager/core/widgets/BottomSheet_Widget.dart';
 import 'package:expense_manager/core/widgets/InputField.dart';
 import 'package:expense_manager/core/widgets/TextWidget.dart';
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 class AddTxn extends StatefulWidget {
   final bool? isincome;
-  AddTxn({super.key, required this.isincome});
+  final TransactionModel? transaction;
+  AddTxn({super.key, required this.isincome,this.transaction});
 
   @override
   State<AddTxn> createState() => _AddTxnState();
@@ -15,11 +25,18 @@ class AddTxn extends StatefulWidget {
 
 class _AddTxnState extends State<AddTxn> {
   bool? isincome;
+  final CategoryController categoryController =
+  Get.find<CategoryController>();
+  final PaymentTypeController paymentTypeController =
+  Get.find<PaymentTypeController>();
+  final TransactionController transactionController =
+  Get.find<TransactionController>();
 
+  PaymentTypeModel? selectedPaymentType;
+  TextEditingController paymentType = TextEditingController();
   TextEditingController date = TextEditingController();
   TextEditingController amount = TextEditingController();
   TextEditingController category = TextEditingController();
-  TextEditingController subcategory = TextEditingController();
   TextEditingController note = TextEditingController();
 
   @override
@@ -27,9 +44,32 @@ class _AddTxnState extends State<AddTxn> {
     // TODO: implement initState
     super.initState();
     isincome = widget.isincome;
+    if (widget.transaction != null) {
+      final txn = widget.transaction!;
+      isincome = txn.type == 'income';
+      amount.text = txn.amount.toString();
+      date.text = DateFormat('dd MMM yyyy').format(DateTime.parse(txn.transactionDate));
+      note.text = txn.note ?? '';
+
+      // Set selected objects
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        selectedCategory = categoryController.categories
+            .firstWhereOrNull((c) => c.id == txn.categoryId);
+        if (selectedCategory != null) {
+          category.text = selectedCategory!.name;
+        }
+
+        selectedPaymentType = paymentTypeController.paymentTypes
+            .firstWhereOrNull((p) => p.id == txn.paymentTypeId);
+        if (selectedPaymentType != null) {
+          paymentType.text = selectedPaymentType!.name;
+        }
+        setState(() {});
+      });
+    }
   }
 
-
+  CategoryModel? selectedCategory;
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
@@ -37,24 +77,24 @@ class _AddTxnState extends State<AddTxn> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.background,
+        surfaceTintColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(Icons.arrow_back, size: 24, color: AppColors.textPrimary),
-        ),
+        automaticallyImplyLeading: true,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextWidget(
-              text: "Add New Transaction",
+              text:  widget.transaction == null
+                  ? "Add New Transaction"
+                  : "Edit Transaction",
               size: TextSizes.Title_1,
               weight: TextWidget.Bold_text,
               color: AppColors.textPrimary,
             ),
             TextWidget(
-              text: "Add your income of expense",
+              text: widget.transaction == null
+                  ? "Add your income of expense"
+                  : "Update your transaction details",
               size: TextSizes.Title_3,
               weight: TextWidget.Bold_text,
               color: AppColors.textSecondary,
@@ -118,7 +158,20 @@ class _AddTxnState extends State<AddTxn> {
                           color: AppColors.primary,
                         ),
                         readOnly: true,
-                        onTap: () {},
+                        onTap: () async {
+                          final DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
+                          );
+
+                          if (pickedDate != null) {
+                            date.text = DateFormat(
+                              'dd MMM yyyy',
+                            ).format(pickedDate);
+                          }
+                        },
                       ),
                       SizedBox(height: height * 0.02),
                       TextWidget(
@@ -137,7 +190,11 @@ class _AddTxnState extends State<AddTxn> {
                           color: AppColors.primary,
                         ),
                         postfixicon: IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              amount.text = '';
+                            });
+                          },
                           icon: CircleAvatar(
                             backgroundColor: AppColors.textSecondary.withValues(
                               alpha: 0.1,
@@ -157,9 +214,13 @@ class _AddTxnState extends State<AddTxn> {
                         children: [
                           GestureDetector(
                             onTap: () {
+                              if (isincome!) return;
                               setState(() {
-                                if (isincome!) return;
                                 isincome = !isincome!;
+                                selectedCategory = null;
+                                category.text = '';
+                                selectedPaymentType = null;
+                                paymentType.text = '';
                               });
                             },
                             child: Container(
@@ -207,6 +268,10 @@ class _AddTxnState extends State<AddTxn> {
                               if (!isincome!) return;
                               setState(() {
                                 isincome = !isincome!;
+                                selectedCategory = null;
+                                category.text = '';
+                                selectedPaymentType = null;
+                                paymentType.text = '';
                               });
                             },
                             child: Container(
@@ -289,15 +354,91 @@ class _AddTxnState extends State<AddTxn> {
                         hinttext: "Category",
                         readOnly: true,
                         controller: category,
-                        onTap: () {
-                            showModalBottomSheet(context: context, builder: (context) {
-                                    // return BottomSheetWidget();
-                            },);
+                        prefixicon: selectedCategory == null
+                            ? Icon(
+                          Icons.category_outlined,
+                          size: 24,
+                          color: AppColors.primary,
+                        )
+                            : Icon(
+                          CategoryHelper.getIcon(selectedCategory!.icon),
+                          size: 24,
+                          color: CategoryHelper.getColor(selectedCategory!.color),
+                        ),
+                        onTap: ()async{
+                          final String type =
+                          isincome == true ? 'income' : 'expense';
+                          await categoryController.getAllCategories();
+                          showModalBottomSheet(
+                            showDragHandle: true,
+                            isDismissible: true,
+                            backgroundColor: AppColors.surface,
+                            context: context,
+                            builder: (context) {
+                              return Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                ),
+                                child: Obx(() {
+                                  final categories = categoryController.categories
+                                      .where((item) => item.type == type)
+                                      .toList();
+
+                                  return ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: categories.length,
+                                    separatorBuilder: (context, index) {
+                                      return const Divider();
+                                    },
+                                    itemBuilder: (context, index) {
+                                      final item = categories[index];
+
+                                      final categoryColor =
+                                      CategoryHelper.getColor(item.color);
+
+                                      return ListTile(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedCategory = item;
+                                            category.text = item.name;
+                                          });
+
+                                          Navigator.pop(context);
+                                        },
+
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: categoryColor.withValues(alpha: 0.3),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Icon(
+                                            CategoryHelper.getIcon(item.icon),
+                                            color: categoryColor,
+                                          ),
+                                        ),
+
+                                        title: TextWidget(
+                                          text: item.name,
+                                          size: TextSizes.Title_2,
+                                          weight: TextWidget.Medium_text,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }),
+                              );
+                            },
+                          );
                         },
+
                       ),
                       SizedBox(height: height * 0.02),
                       TextWidget(
-                        text: "Sub-Category",
+                        text: "Payment Type",
                         size: TextSizes.Title_3,
                         weight: TextWidget.Medium_text,
                       ),
@@ -305,8 +446,94 @@ class _AddTxnState extends State<AddTxn> {
 
                       Inputfield(
                         type: TextInputType.none,
-                        hinttext: "Sub-Category",
-                        controller: subcategory,
+                        hinttext: "Payment Type",
+                        readOnly: true,
+                        controller: paymentType,
+
+                        prefixicon: selectedPaymentType == null
+                            ? Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 24,
+                          color: AppColors.primary,
+                        )
+                            : Icon(
+                          PaymentTypeHelper.getIcon(selectedPaymentType!.icon),
+                          size: 24,
+                          color: AppColors.primary,
+                        ),
+
+                        onTap: () {
+                          final String type =
+                          isincome == true ? 'income' : 'expense';
+
+                          showModalBottomSheet(
+                            showDragHandle: true,
+                            isDismissible: true,
+                            backgroundColor: AppColors.surface,
+                            context: context,
+                            builder: (context) {
+                              return Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                ),
+                                child: Obx(() {
+                                  final paymentTypes =
+                                  paymentTypeController.paymentTypes
+                                      .where(
+                                        (item) =>
+                                    item.transactionType == type ||
+                                        item.transactionType == 'both',
+                                  )
+                                      .toList();
+
+                                  return ListView.separated(
+                                    shrinkWrap: true,
+                                    itemCount: paymentTypes.length,
+                                    separatorBuilder: (context, index) {
+                                      return const Divider();
+                                    },
+                                    itemBuilder: (context, index) {
+                                      final item = paymentTypes[index];
+
+                                      return ListTile(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedPaymentType = item;
+                                            paymentType.text = item.name;
+                                          });
+
+                                          Navigator.pop(context);
+                                        },
+
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Icon(
+                                            PaymentTypeHelper.getIcon(item.icon),
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+
+                                        title: TextWidget(
+                                          text: item.name,
+                                          size: TextSizes.Title_2,
+                                          weight: TextWidget.Medium_text,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }),
+                              );
+                            },
+                          );
+                        },
+
                       ),
                       SizedBox(height: height * 0.02),
                       TextWidget(
@@ -338,7 +565,146 @@ class _AddTxnState extends State<AddTxn> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    if (amount.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: TextWidget(
+                            text: "Please enter amount",
+                            size: TextSizes.Title_3,
+                            weight: TextWidget.Medium_text,
+                            color: AppColors.background,
+
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (date.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: TextWidget(
+                            text: "Please select date",
+                            size: TextSizes.Title_3,
+                            weight: TextWidget.Medium_text,
+                            color: AppColors.background,
+
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (selectedCategory == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: TextWidget(
+                            text: "Please select category",
+                            size: TextSizes.Title_3,
+                            weight: TextWidget.Medium_text,
+                            color: AppColors.background,
+
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (selectedPaymentType == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: TextWidget(
+                            text: "Please select payment type",
+                            size: TextSizes.Title_3,
+                            weight: TextWidget.Medium_text,
+                            color: AppColors.background,
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      final now = DateTime.now().toIso8601String();
+
+                      if (widget.transaction == null) {
+                        final transaction = TransactionModel(
+                          amount: double.parse(amount.text.trim()),
+                          type: isincome == true ? 'income' : 'expense',
+                          categoryId: selectedCategory!.id!,
+                          paymentTypeId: selectedPaymentType!.id!,
+                          transactionDate: DateFormat('dd MMM yyyy')
+                              .parse(date.text)
+                              .toIso8601String(),
+                          note: note.text.trim().isEmpty ? null : note.text.trim(),
+                          createdAt: now,
+                          updatedAt: now,
+                        );
+
+                        await transactionController.addTransaction(transaction);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: TextWidget(
+                              text: "Transaction added successfully",
+                              size: TextSizes.Title_3,
+                              weight: TextWidget.Medium_text,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        );
+                      } else {
+                        final transaction = widget.transaction!.copyWith(
+                          amount: double.parse(amount.text.trim()),
+                          type: isincome == true ? 'income' : 'expense',
+                          categoryId: selectedCategory!.id!,
+                          paymentTypeId: selectedPaymentType!.id!,
+                          transactionDate: DateFormat('dd MMM yyyy')
+                              .parse(date.text)
+                              .toIso8601String(),
+                          note: note.text.trim().isEmpty ? null : note.text.trim(),
+                          updatedAt: now,
+                        );
+
+                        await transactionController.updateTransaction(transaction);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: TextWidget(
+                              text: "Transaction updated successfully",
+                              size: TextSizes.Title_3,
+                              weight: TextWidget.Medium_text,
+                              color: AppColors.background,
+                            ),
+                          ),
+                        );
+                      }
+                      date.clear();
+                      category.clear();
+                      amount.clear();
+                      paymentType.clear();
+                      note.clear();
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: TextWidget(
+                            text: widget.transaction == null
+                                ? "Failed to add transaction"
+                                : "Failed to update transaction",
+                            size: TextSizes.Title_3,
+                            weight: TextWidget.Medium_text,
+                            color: AppColors.background,
+
+                          ),
+                        ),
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     backgroundColor: AppColors.transparent,
@@ -347,7 +713,9 @@ class _AddTxnState extends State<AddTxn> {
                     ),
                   ),
                   child: TextWidget(
-                    text: "Save Transaction",
+                    text: widget.transaction == null
+                        ? "Save Transaction"
+                        : "Update Transaction",
                     size: TextSizes.Title_3,
                     weight: TextWidget.Medium_text,
                     color: AppColors.white,
@@ -398,7 +766,7 @@ class _AddTxnState extends State<AddTxn> {
     date.dispose();
     category.dispose();
     amount.dispose();
-    subcategory.dispose();
+    paymentType.dispose();
     note.dispose();
   }
 }

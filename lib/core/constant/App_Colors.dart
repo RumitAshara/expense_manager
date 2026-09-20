@@ -29,7 +29,7 @@ class AppColors {
   // Border & Divider
   // =========================
   static const Color border = Color(0xFFE2E8F0);
-  static const Color divider = Color(0xFFE5E7EB);
+  static const Color divider = Color(0xFFDCDBDB);
 
   // =========================
   // Status Colors
